@@ -1,0 +1,12 @@
+.no-table-data {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	min-height: 200px !important;
+
+	& > img {
+		width: 200px;
+		height: 200px;
+	}
+}
