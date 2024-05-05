@@ -4,7 +4,7 @@ import DashboardRoutes from './Dashboards'
 import UserRoutes from './Users'
 
 // ** Document title
-const TemplateTitle = '%s - Vuexy React Admin Template'
+const TemplateTitle = 'Task Manager'
 
 // ** Default Route
 const DefaultRoute = '/dashboard'

@@ -1,127 +1,185 @@
-import React from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { Link } from "react-router-dom";
-import useJwt from '../../../auth/jwt/useJwt'
-import { useDispatch } from "react-redux";
-import {handleLogin} from '../../../redux/authentication'
-import ToastContent from "@src/views/components/toast/Toast.js";
+// ** React Imports
+import { useContext, useState } from 'react'
+import { Link, useHistory } from 'react-router-dom'
+
+// ** Custom Hooks
+import { useSkin } from '@hooks/useSkin'
+import useJwt from '@src/auth/jwt/useJwt'
+
+// ** Third Party Components
+import { useDispatch } from 'react-redux'
 import { toast, Slide } from 'react-toastify'
-import { getHomeRouteForLoggedInUser } from "../../../auth/utils";
-import { useHistory } from "react-router-dom";
+import { useFormik } from 'formik'
+import * as Yup from 'yup'
+
+import { Coffee } from 'react-feather'
+
+// ** Actions
+import { handleLogin } from '@store/authentication'
+
+// ** Context
+import { AbilityContext } from '@src/utility/context/Can'
+
+// ** Custom Components
+import Avatar from '@components/avatar'
+import InputPasswordToggle from '@components/input-password-toggle'
+import Toast from "@src/views/components/toast/Toast"
+
+
+
+// ** Utils
+import { getHomeRouteForLoggedInUser } from '@utils'
+
+import Logo from '@src/assets/images/logo/logo.png'
+
+// ** Reactstrap Imports
+import { Row, Col, Form, Input, Label, FormGroup, FormFeedback, Button, CardText, CardTitle, UncontrolledTooltip } from 'reactstrap'
+
+// ** Styles
+import '@styles/react/pages/page-authentication.scss'
+
+
 
 const Login = () => {
-  /* State Vars */
-  const [isLoading, setLoading] = React.useState(false);
+
+  // ** Variables States
+  const [isLoading, setIsLoading] = useState(false)
 
 
-  /* Redux Vars */
+  // ** Hooks
+  const { skin } = useSkin()
   const dispatch = useDispatch()
+  const history = useHistory()
+  const ability = useContext(AbilityContext)
+  
+  const illustration = skin === 'dark' ? 'login-v2-dark.svg' : 'login-v2.svg',
+    source = require(`@src/assets/images/pages/${illustration}`).default
 
-  /* React Router Vars */
-  const history = useHistory();
 
-  /* Formik Vars */
+  // ** Handle Login
+  const handleUserLogin = async values => {
+    try {
+      setIsLoading(true)
+      const response = await useJwt.login(values)
+      setIsLoading(false)
+      if (!response.data.status) return toast.error(<Toast status='error' message={response.data.message} />, { transition: Slide, hideProgressBar: true })
+
+      const responseUserData = {...response.data.data.user, ability: [
+        {
+          action: 'read',
+          subject: 'ACL'
+        },
+        {
+          action: 'read',
+          subject: 'Auth'
+        }
+      ]}
+      const token = response.data.data.token
+
+      const userData = {...responseUserData, accessToken: token, refreshToken: token}
+
+      // Set user data and token in localstorage
+      dispatch(handleLogin(userData))
+      ability.update(responseUserData.ability)
+      const route = getHomeRouteForLoggedInUser('client')
+      history.push(route)
+      toast.success(<Toast status='success' message={response.data.message} />, { transition: Slide, hideProgressBar: true })
+
+    } catch (error) {
+      setIsLoading(false)
+      toast.error(<Toast status='error' message={error.message} />, { transition: Slide, hideProgressBar: true })
+    }
+  }
+
+
+  // ** Formik Initial Values
   const formik = useFormik({
     initialValues: {
-      username: "",
-      password: "123456",
+      email: '',
+      password: ''
     },
-    validationSchema: Yup.object({
-      username: Yup.string().required('Username is required'),
-      password: Yup.string().required('VALIDATION_MESSAGES.required'),
+    validationSchema: Yup.object().shape({
+      email: Yup.string().email().required('Email is required'),
+      password: Yup.string().required('Password is required')
     }),
-    onSubmit: (values) => {
-      handleUserLogin(values);
-    },
-  });
-
-
-  /* Function to handle Login */
-  const handleUserLogin = async (data) => {
-    // setLoading(true);
-    if (Object.values(data).every(field => field.length > 0)) {
-      const apiRes = await useJwt.login({ username: data.username, password: data.password });
-      if (apiRes.data.status) {
-        const data = {...apiRes.data.data, accessToken: apiRes.data.token, refreshToken: apiRes.data.token}
-        dispatch(handleLogin(data))
-        const homeRoutes = getHomeRouteForLoggedInUser(data)
-        history.push(homeRoutes)
-        toast.success(<ToastContent status="Success" message={apiRes.data.message} />, { transition: Slide, hideProgressBar: true, autoClose: 2000, position: toast.POSITION.BOTTOM_CENTER })
-      } else {
-        toast.error(<ToastContent status="Error" message={apiRes.data.message} />, { transition: Slide, hideProgressBar: true, autoClose: 2000, position: toast.POSITION.BOTTOM_CENTER})
-      }
-    } 
-  };
-
+    onSubmit: values => {
+      handleUserLogin(values)
+    }
+  })
+ 
 
   return (
-    <div className="container-fluid">
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 h-full">
-        <div className="w-full xl:w-1/2 lg:w-1/2 md:w-1/2 h-5/6 p-6 bg-white rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-4 text-center">Login</h2>
-          <form onSubmit={formik.handleSubmit}>
-          <div className="mb-4">
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700"
-              >
-                User Name
-              </label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                autoComplete="off"
-                className={`mt-1 px-4 py-2 w-full  rounded-lg  border-2 ${formik.errors.username && formik.touched.username
-                    ? "border-red-800"
-                    : "border-gray-800"
-                  }`}
-                value={formik.values.username}
-                onChange={formik.handleChange}
-              />
-              {formik.errors.username && formik.touched.username && (
-                <span className="text-red-800">{formik.errors.username}</span>
-              )}
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                className={`mt-1 px-4 py-2 w-full  rounded-lg  border-2 ${
-                  formik.errors.password && formik.touched.password
-                    ? "border-red-800"
-                    : "border-gray-800"
-                }`}
-                onChange={formik.handleChange}
-                value={formik.values.password}
-              />
-              {formik.errors.password && formik.touched.password && (
-                <span className="text-red-800">{formik.errors.password}</span>
-              )}
-            </div>
-            <div>
-              <button
-                disabled={isLoading}
-                type="submit"
-                className="w-full  py-2 px-4 border bg-gray-900 text-white rounded-lg hover:bg-gray-100 hover:border-gray-800 hover:text-gray-800"
-              >
-                Login
-              </button>
-            </div>
-          </form>
-          <p className="text-blue-500 text-center d-block mx-auto w-100 mt-5"><Link to='/register'> Don't have an account ?</Link></p>
-        </div>
-      </div>
-    </div>
-  );
-};
+    <div className='auth-wrapper auth-cover'>
+      <Row className='auth-inner m-0'>
+        <Link className='brand-logo' to='/' onClick={e => e.preventDefault()}>
+          <div className='d-flex align-items-center'>
+            <img src={Logo} style={{height: '40px'}} alt='login with task manager' />
+          <h2 className='brand-text text-primary ms-1'>Task Manager</h2>
 
-export default Login;
+          </div>
+        </Link>
+        <Col className='d-none d-lg-flex align-items-center p-5' lg='8' sm='12'>
+          <div className='w-100 d-lg-flex align-items-center justify-content-center px-5'>
+            <img className='img-fluid' src={source} alt='Login Cover' />
+          </div>
+        </Col>
+        <Col className='d-flex align-items-center auth-bg px-2 p-lg-5' lg='4' sm='12'>
+          <Col className='px-xl-2 mx-auto' sm='8' md='6' lg='12'>
+            <CardTitle tag='h2' className='fw-bold mb-1'>
+              Welcome to Task Manager! 👋
+            </CardTitle>
+            <CardText className='mb-2'>Please sign-in to your account and start the adventure</CardText>
+            <Form className='auth-login-form mt-2' onSubmit={formik.handleSubmit}>
+              <FormGroup>
+                <Label className='form-label' for='login-email'>
+                  Email
+                </Label>
+                <Input
+                  autoFocus
+                  type='email'
+                  value={formik.values.email}
+                  id='login-email'
+                  name='email'
+                  onChange={formik.handleChange}  
+                  invalid={formik.errors.email && formik.touched.email}
+                  />
+                {formik.errors.email && formik.touched.email && <FormFeedback>{formik.errors.email}</FormFeedback>}
+              </FormGroup>
+              <FormGroup>
+                <div className='d-flex justify-content-between'>
+                  <Label className='form-label' for='login-password'>
+                    Password
+                  </Label>
+                </div>
+                <InputPasswordToggle
+                  value={formik.values.password}
+                  id='login-password'
+                  name='password'
+                  onChange={formik.handleChange}
+                  className='input-group-merge'
+                  invalid={formik.errors.password && formik.touched.password}
+                />
+                {formik.errors.password && formik.touched.password && <FormFeedback>{formik.errors.password}</FormFeedback>}
+              </FormGroup>
+
+              <Button.Ripple disabled={isLoading} type='submit' color='primary' block>
+                {isLoading ? 'Loading...' : 'Sign in'}
+              </Button.Ripple>
+            </Form>
+            
+            <p className='text-center mt-2'>
+              <span className='me-25'>New on our platform?</span>
+              <Link to='/register'>
+                <span>Create an account</span>
+              </Link>
+            </p>
+           
+           
+          </Col>
+        </Col>
+      </Row>
+    </div>
+  )
+}
+
+export default Login
