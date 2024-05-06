@@ -1,16 +1,16 @@
 
 // ** React Imports
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 
 
 // ** Reactstrap Imports
-import {  Card } from 'reactstrap'
+import { Card, DropdownItem, DropdownMenu, DropdownToggle, UncontrolledDropdown } from 'reactstrap'
 
 // ** Custom Components
 import { toast, Slide } from 'react-toastify'
 import Toast from '@src/views/components/toast/Toast'
 import '@styles/react/libs/tables/react-dataTable-component.scss'
-import {  TaskStatus, TaskPriority } from './common/TableComponent'
+import { TaskStatus, TaskPriority } from './common/TableComponent'
 
 // ** Third Party Components
 import ReactPaginate from 'react-paginate'
@@ -20,13 +20,22 @@ import moment from 'moment'
 
 // ** Store & Actions
 import { useDispatch, useSelector } from 'react-redux'
-import { getTasks } from './store'
-import { ChevronDown } from 'react-feather'
+import { deleteTask, getTasks } from './store'
+import { ChevronDown, Crosshair, Edit, Edit2, MoreVertical, Trash } from 'react-feather'
 import NoTableData from '../../components/table/NoTableData'
 import LoadingComponent from '../../components/table/LoadingComponent'
+import { isEmpty } from '../../../helper/function'
+import ChangePriorityModal from './common/ChangePriorityModal'
+import ConfirmationModal from './common/ConfirmationModal'
+
+// ** Routes & Router
+import { useHistory } from 'react-router-dom'
 
 
 const TaskTable = () => {
+
+  // ** Router Import
+  const history = useHistory()
 
   // ** Store Vars
   const dispatch = useDispatch()
@@ -39,6 +48,8 @@ const TaskTable = () => {
   const [sort, setSort] = useState('id')
   const [sortOrder, setSortOrder] = useState('desc')
   const [isLoading, setIsLoading] = useState(false)
+  const [changePriorityModalInfo, setChangePriorityModalInfo] = useState(null)
+  const [deleteTaskModalInfo, setDeleteTaskModalInfo] = useState(null)
 
 
   // ** Function to get data
@@ -59,7 +70,6 @@ const TaskTable = () => {
 
   // ** Function to get data
   useEffect(() => {
-
     getAllTaskList()
   }, [currentPage, perPageItem, sort, sortOrder])
 
@@ -75,10 +85,46 @@ const TaskTable = () => {
   }
 
 
+  // ** Priority modal toggle
+  const toggleChangePriorityModal = (row) => setChangePriorityModalInfo(row)
+
+  // ** Delete modal toggle
+  const toggleDeleteTaskModal = (row) => setDeleteTaskModalInfo(row)
+
+  // ** Function to handle priority updated
+  const handlePriorityUpdated = () => {
+    setChangePriorityModalInfo(null)
+    getAllTaskList()
+  }
+
+  // ** Function to handle task delete
+  const handleTaskDelete = async () => {
+    try {
+      const { taskId } = deleteTaskModalInfo
+
+      const res = await dispatch(deleteTask({taskId}))
+      if (!res.payload.status) return toast.error(<Toast status='error' message={res.payload.message} />, { transition: Slide, hideProgressBar: true })
+
+      setDeleteTaskModalInfo(null)
+      getAllTaskList()
+
+      toast.success(<Toast status='success' message={res.payload.message} />, { transition: Slide, hideProgressBar: true })
+
+    } catch (error) {
+      toast.error(<Toast status='error' message={error.message} />, { transition: Slide, hideProgressBar: true })
+    }
+  }
+
+  // ** Function to handle Edit
+  
+  const handleEdit = (e, row) => {
+    e.preventDefault()
+    history.push(`/task/edit/${row.taskId}`)
+  }
 
   // ** Table Columns
   const columns = [
-    
+
     {
       name: 'Title',
       selector: 'title',
@@ -115,6 +161,36 @@ const TaskTable = () => {
       sortable: true,
       minWidth: '250px',
       cell: row => <p className='text-bold-500 my-1'>{moment(row.createdAt).format('MMM DD, YYYY hh:mm A')}</p>
+    },
+    {
+      name: 'Actions',
+      allowOverflow: true,
+      sortable: false,
+      minWidth: '100px',
+      cell: row => {
+        return (
+          <UncontrolledDropdown>
+            <DropdownToggle className='icon-btn hide-arrow' color='transparent' size='sm' caret>
+              <MoreVertical size={15} />
+            </DropdownToggle>
+            <DropdownMenu right>
+              <DropdownItem className='w-100' onClick={(e) => handleEdit(e, row)}>
+                <Edit className='me-50' size={15} /> <span className='align-middle'>Edit</span>
+              </DropdownItem>
+
+              <DropdownItem className='w-100'  onClick={() => toggleChangePriorityModal(row)}>
+                <Crosshair className='me-50' size={15} /> <span className='align-middle'>Change Priority</span>
+              </DropdownItem>
+
+
+              <hr className='py-0 my-0' />
+              <DropdownItem className='w-100' onClick={() => toggleDeleteTaskModal(row)}>
+                <Trash className='me-50 text-danger' size={15} /> <span className='align-middle text-danger'>Delete</span>
+              </DropdownItem>
+            </DropdownMenu>
+          </UncontrolledDropdown>
+        )
+      }
     }
   ]
 
@@ -147,30 +223,37 @@ const TaskTable = () => {
       containerClassName='pagination react-paginate separated-pagination pagination-sm justify-content-end pe-1 mt-1'
     />
   }
-  
+
+
 
   return (
-    <Card className='card-company-table'>
-      <DataTable
-            columns={columns}
-            data={store?.data || []}
-            persistTableHead={true}
-            noHeader={true}
-            responsive={true}
-            keyField="courseID"
-            sortIcon={<ChevronDown />}
-            pagination={true}
-            sortServer={true}
-            paginationServer={true}
-            paginationTotalRows={store?.total}
-            onSort={handleSort}
-            paginationComponent={CustomPagination}
-            progressPending={isLoading}
-            progressComponent={<LoadingComponent />}
-            noDataComponent={<NoTableData message={'No tasks found'} />}
-          />
-        
-    </Card>
+    <Fragment>
+      <Card className='card-company-table'>
+        <DataTable
+          columns={columns}
+          bordered
+          className='react-dataTable'
+          style={{ minHeight: '70vh' }}
+          data={store?.data || []}
+          persistTableHead={true}
+          noHeader={true}
+          responsive={true}
+          keyField="courseID"
+          sortIcon={<ChevronDown />}
+          pagination={true}
+          sortServer={true}
+          paginationServer={true}
+          paginationTotalRows={store?.total}
+          onSort={handleSort}
+          paginationComponent={CustomPagination}
+          progressPending={isLoading}
+          progressComponent={<LoadingComponent />}
+          noDataComponent={<NoTableData message={'No tasks found'} />}
+        />
+      </Card>
+      {!isEmpty(changePriorityModalInfo) && <ChangePriorityModal show={!isEmpty(changePriorityModalInfo)} onClose={() => setChangePriorityModalInfo(null)} data={changePriorityModalInfo} onSuccess={handlePriorityUpdated}/>}
+      {!isEmpty(deleteTaskModalInfo) && <ConfirmationModal show={!isEmpty(deleteTaskModalInfo)} handleClose={() => setDeleteTaskModalInfo(null)} handleSubmit={handleTaskDelete}/>}
+    </Fragment>
   )
 }
 

@@ -11,6 +11,7 @@ const dashboard = {
     createTask: `/task/create`,
     updateTask: `/task/update`,
     deleteTask: `/task/delete`,
+    changePriority: `/task/update-priority`
 }
 
 

@@ -33,6 +33,16 @@ export const deleteTask = createAsyncThunk('taskList/deleteTask', async (body) =
     return response.data
 })
 
+export const updateTaskPriority = createAsyncThunk('taskList/updateTaskPriority', async (body) => {
+    const response = await axios.post(dashboard.changePriority, body)
+    return response.data
+})
+
+export const getTask = createAsyncThunk('taskList/getTaskInfo', async (body) => {
+    const response = await axios.post(dashboard.getTask, body)
+    return response.data
+})
+
 
 export const appDashboardSlice = createSlice({
     name: 'taskList',

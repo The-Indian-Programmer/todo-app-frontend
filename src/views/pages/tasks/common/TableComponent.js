@@ -9,7 +9,7 @@ const TaskStatus = ({ status }) => {
         'todo': 'info'
     }
 
-    return <Badge className='text-capitalize' color={statusColor[status]} pill>{status}</Badge>
+    return <Badge className='text-capitalize px-1' color={statusColor[status]} >{status}</Badge>
 };
 
 const TaskPriority = ({ priority }) => {
@@ -19,7 +19,7 @@ const TaskPriority = ({ priority }) => {
         'high': 'danger'
     }
 
-    return <Badge className='text-capitalize' color={priorityColor[priority]} pill>{priority}</Badge>
+    return <Badge className='text-capitalize px-1' color={priorityColor[priority]} >{priority}</Badge>
 };
 
 

@@ -10,3 +10,9 @@
 		height: 200px;
 	}
 }
+
+.card-company-table {
+	.react-dataTable {
+		min-height: 300px !important;
+	}
+}
