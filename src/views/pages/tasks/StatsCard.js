@@ -68,7 +68,7 @@ const TaskStatsCard = ({ cols }) => {
     },
     {
       title: taskStats?.completed || 0,
-      subtitle: 'Done',
+      subtitle: 'Completed',
       color: 'light-success',
       icon: <CheckCircle size={24} />
     },

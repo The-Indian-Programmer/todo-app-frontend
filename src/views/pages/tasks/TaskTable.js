@@ -25,7 +25,7 @@ import { ChevronDown, Crosshair, Edit, Edit2, MoreVertical, Trash } from 'react-
 import NoTableData from '../../components/table/NoTableData'
 import LoadingComponent from '../../components/table/LoadingComponent'
 import { isEmpty } from '../../../helper/function'
-import ChangePriorityModal from './common/ChangePriorityModal'
+import ChangeStatusModal from './common/ChangeStatusModal'
 import ConfirmationModal from './common/ConfirmationModal'
 
 // ** Routes & Router
@@ -48,7 +48,7 @@ const TaskTable = () => {
   const [sort, setSort] = useState('id')
   const [sortOrder, setSortOrder] = useState('desc')
   const [isLoading, setIsLoading] = useState(false)
-  const [changePriorityModalInfo, setChangePriorityModalInfo] = useState(null)
+  const [changeStatusModalInfo, setChangeStatusModalInfo] = useState(null)
   const [deleteTaskModalInfo, setDeleteTaskModalInfo] = useState(null)
 
 
@@ -86,14 +86,14 @@ const TaskTable = () => {
 
 
   // ** Priority modal toggle
-  const toggleChangePriorityModal = (row) => setChangePriorityModalInfo(row)
+  const toggleChangeStatusModal = (row) => setChangeStatusModalInfo(row)
 
   // ** Delete modal toggle
   const toggleDeleteTaskModal = (row) => setDeleteTaskModalInfo(row)
 
-  // ** Function to handle priority updated
-  const handlePriorityUpdated = () => {
-    setChangePriorityModalInfo(null)
+  // ** Function to handle status updated
+  const handleStatusUpdated = () => {
+    setChangeStatusModalInfo(null)
     getAllTaskList()
   }
 
@@ -138,11 +138,6 @@ const TaskTable = () => {
       sortable: true,
       minWidth: '150px',
       cell: row => {
-        const priorityColor = {
-          low: 'success',
-          medium: 'warning',
-          high: 'danger'
-        }
         return <TaskPriority priority={row.priority} />
       }
     },
@@ -178,8 +173,8 @@ const TaskTable = () => {
                 <Edit className='me-50' size={15} /> <span className='align-middle'>Edit</span>
               </DropdownItem>
 
-              <DropdownItem className='w-100'  onClick={() => toggleChangePriorityModal(row)}>
-                <Crosshair className='me-50' size={15} /> <span className='align-middle'>Change Priority</span>
+              <DropdownItem className='w-100'  onClick={() => toggleChangeStatusModal(row)}>
+                <Crosshair className='me-50' size={15} /> <span className='align-middle'>Change Status</span>
               </DropdownItem>
 
 
@@ -251,7 +246,7 @@ const TaskTable = () => {
           noDataComponent={<NoTableData message={'No tasks found'} />}
         />
       </Card>
-      {!isEmpty(changePriorityModalInfo) && <ChangePriorityModal show={!isEmpty(changePriorityModalInfo)} onClose={() => setChangePriorityModalInfo(null)} data={changePriorityModalInfo} onSuccess={handlePriorityUpdated}/>}
+      {!isEmpty(changeStatusModalInfo) && <ChangeStatusModal show={!isEmpty(changeStatusModalInfo)} onClose={() => setChangeStatusModalInfo(null)} data={changeStatusModalInfo} onSuccess={handleStatusUpdated}/>}
       {!isEmpty(deleteTaskModalInfo) && <ConfirmationModal show={!isEmpty(deleteTaskModalInfo)} handleClose={() => setDeleteTaskModalInfo(null)} handleSubmit={handleTaskDelete}/>}
     </Fragment>
   )

@@ -17,14 +17,14 @@ import * as yup from 'yup'
 
 // ** Store & Actions
 import { useDispatch } from 'react-redux'
-import { updateTaskPriority } from '../store'
+import { updateTaskStatus } from '../store'
 
-const ChangePriorityModal = ({ show, onSuccess, onClose, data }) => {
+const ChangeStatusModal = ({ show, onSuccess, onClose, data }) => {
 
-    const priorityOptions = [
-        { value: 'low', label: 'Low' },
-        { value: 'medium', label: 'Medium' },
-        { value: 'high', label: 'High' }
+    const statusOptions = [
+        { value: 'todo', label: 'Todo' },
+        { value: 'in-progress', label: 'InProgress' },
+        { value: 'completed', label: 'Completed' }
     ]
 
     // ** States
@@ -33,13 +33,13 @@ const ChangePriorityModal = ({ show, onSuccess, onClose, data }) => {
     // ** Dispatch
     const dispatch = useDispatch()
 
-    // ** Function to handle priority change
-    const handlePriorityChange = async (values) => {
+    // ** Function to handle taskStatus change
+    const handleStatusChange = async (values) => {
         try {
-            const { priority } = values
-            const updatedData = { taskId: data.taskId, priority }
+            const { taskStatus } = values
+            const updatedData = { taskId: data.taskId, taskStatus }
             setIsLoading(true)
-            const res = await dispatch(updateTaskPriority(updatedData))
+            const res = await dispatch(updateTaskStatus(updatedData))
             setIsLoading(false)
             if (!res.payload.status) return toast.error(<Toast status='error' message={res.payload.message} />, { transition: Slide, hideProgressBar: true })
 
@@ -57,20 +57,20 @@ const ChangePriorityModal = ({ show, onSuccess, onClose, data }) => {
 
     const formik = useFormik({
         initialValues: {
-            priority: data.priority || ''
+            taskStatus: data.taskStatus || ''
         },
         validationSchema: yup.object().shape({
-            priority: yup.string().required('Required')
+            taskStatus: yup.string().required('Required')
         }),
         onSubmit: (values) => {
-            handlePriorityChange(values)
+            handleStatusChange(values)
         }
     })
 
     return (
         <Modal  backdrop='static'  size='md' isOpen={show} centered toggle={onClose}>
             <ModalHeader toggle={onClose}>
-                    Update Priority
+                    Update Task Status
             </ModalHeader>
 
             <ModalBody>
@@ -78,20 +78,20 @@ const ChangePriorityModal = ({ show, onSuccess, onClose, data }) => {
                 <Row>
                     <Col lg='12' md='12' xl='12' sm='12'>
                         <FormGroup>
-                            <Label for='priority'>Priority</Label>
+                            <Label for='priority'>Task Status</Label>
                             <ReactSelect
-                                options={priorityOptions}
+                                options={statusOptions}
                                 isClearable={false}
                                 className='react-select'
                                 classNamePrefix='select'
-                                id='priority'
-                                name='priority'
-                                value={priorityOptions.find(option => option.value === formik.values.priority)}
-                                onChange={(value) => formik.setFieldValue('priority', value.value)}
+                                id='taskStatus'
+                                name='taskStatus'
+                                value={statusOptions.find(option => option.value === formik.values.taskStatus)}
+                                onChange={(value) => formik.setFieldValue('taskStatus', value.value)}
                                 onBlur={formik.handleBlur}
                             />
 
-                            {formik.touched.priority && formik.errors.priority && <FormFeedback className='d-block'>{formik.errors.priority}</FormFeedback>}
+                            {formik.touched.taskStatus && formik.errors.taskStatus && <FormFeedback className='d-block'>{formik.errors.taskStatus}</FormFeedback>}
                         </FormGroup>
                     </Col>
 
@@ -111,4 +111,4 @@ const ChangePriorityModal = ({ show, onSuccess, onClose, data }) => {
 
     )
 }
-export default ChangePriorityModal
+export default ChangeStatusModal

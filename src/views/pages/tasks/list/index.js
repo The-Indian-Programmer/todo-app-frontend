@@ -6,13 +6,14 @@ import { useEffect } from 'react'
 import { Row, Col } from 'reactstrap'
 
 
-// ** Demo Components
-import CompanyTable from '../TaskTable'
 
 // ** Styles
 import '@styles/react/libs/charts/apex-charts.scss'
 import '@styles/base/pages/dashboard-ecommerce.scss'
+
+// ** Components
 import StatsCard from '../StatsCard'
+import TaskTable from '../TaskTable'
 
 
 const TaskDashboard = () => {
@@ -28,7 +29,7 @@ const TaskDashboard = () => {
       
       <Row className='match-height'>
         <Col lg='12' xs='12'>
-          <CompanyTable />
+          <TaskTable />
         </Col>
         
       </Row>
